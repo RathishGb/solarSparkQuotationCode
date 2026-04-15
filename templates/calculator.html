@@ -1,0 +1,556 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Internal Cost Calculator - Solar Sparks Innovation</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e, #16213e, #0f3460);
+            min-height: 100vh;
+            color: #333;
+        }
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 30px 20px;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            color: white;
+        }
+        .header h1 {
+            font-size: 2em;
+            margin-bottom: 5px;
+            color: #e94560;
+        }
+        .header p {
+            font-size: 1em;
+            opacity: 0.8;
+        }
+        .nav-link {
+            display: inline-block;
+            margin-top: 10px;
+            color: #f4a261;
+            text-decoration: none;
+            font-size: 0.9em;
+        }
+        .nav-link:hover { text-decoration: underline; }
+        .card {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            margin-bottom: 20px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.15);
+        }
+        .card h2 {
+            color: #1a3a5c;
+            font-size: 1.3em;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #e94560;
+        }
+        .form-group {
+            margin-bottom: 18px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 6px;
+            font-weight: 600;
+            color: #1a3a5c;
+            font-size: 0.9em;
+        }
+        .form-group input, .form-group select {
+            width: 100%;
+            padding: 10px 14px;
+            border: 2px solid #e0e6ed;
+            border-radius: 8px;
+            font-size: 0.95em;
+            transition: border-color 0.2s;
+            font-family: inherit;
+        }
+        .form-group input:focus, .form-group select:focus {
+            outline: none;
+            border-color: #e94560;
+            box-shadow: 0 0 0 3px rgba(233, 69, 96, 0.15);
+        }
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+        .form-row-3 {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 15px;
+        }
+        .form-row-4 {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr 1fr;
+            gap: 15px;
+        }
+        .entry-block {
+            background: #f8f9fc;
+            border: 2px solid #e0e6ed;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 15px;
+            position: relative;
+        }
+        .entry-block h3 {
+            color: #0f3460;
+            margin-bottom: 15px;
+            font-size: 1.1em;
+        }
+        .remove-entry {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: #e74c3c;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 28px;
+            height: 28px;
+            font-size: 1.1em;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.2s;
+        }
+        .remove-entry:hover { background: #c0392b; }
+        .add-entry-btn {
+            background: #0f3460;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-size: 0.95em;
+            cursor: pointer;
+            transition: background 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .add-entry-btn:hover { background: #0a2240; }
+        .btn-row {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        .submit-btn {
+            background: linear-gradient(135deg, #e94560, #c0392b);
+            color: white;
+            border: none;
+            padding: 14px 40px;
+            border-radius: 10px;
+            font-size: 1.1em;
+            font-weight: 700;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            letter-spacing: 0.5px;
+        }
+        .submit-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(233, 69, 96, 0.4);
+        }
+        .excel-btn {
+            background: linear-gradient(135deg, #27ae60, #1e8449);
+            color: white;
+            border: none;
+            padding: 14px 40px;
+            border-radius: 10px;
+            font-size: 1.1em;
+            font-weight: 700;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            letter-spacing: 0.5px;
+        }
+        .excel-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(39, 174, 96, 0.4);
+        }
+        .hint {
+            font-size: 0.8em;
+            color: #7f8c8d;
+            margin-top: 4px;
+        }
+        .auto-field {
+            background: #f0f0f0 !important;
+            color: #555;
+        }
+
+        /* Results */
+        .results-section { display: none; }
+        .results-section.active { display: block; }
+        .result-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+        .result-table th {
+            background: #1a3a5c;
+            color: white;
+            padding: 10px 14px;
+            text-align: left;
+            font-size: 0.9em;
+        }
+        .result-table td {
+            padding: 8px 14px;
+            border-bottom: 1px solid #e0e6ed;
+            font-size: 0.9em;
+        }
+        .result-table tr:nth-child(even) { background: #f8f9fc; }
+        .result-table .section-row {
+            background: #e8eef4 !important;
+            font-weight: 700;
+            color: #1a3a5c;
+        }
+        .result-table .total-row {
+            background: #d6eaf8 !important;
+            font-weight: 700;
+            font-size: 1em;
+        }
+        .result-table .profit-row-positive {
+            background: #d5f5e3 !important;
+            font-weight: 700;
+            font-size: 1.05em;
+        }
+        .result-table .profit-row-negative {
+            background: #fadbd8 !important;
+            font-weight: 700;
+            font-size: 1.05em;
+        }
+        .entry-count-section {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+        .entry-count-section label {
+            font-weight: 600;
+            color: #1a3a5c;
+            white-space: nowrap;
+        }
+        .entry-count-section select {
+            width: auto;
+            padding: 8px 14px;
+            border: 2px solid #e0e6ed;
+            border-radius: 8px;
+            font-size: 0.95em;
+        }
+        @media (max-width: 600px) {
+            .form-row, .form-row-3, .form-row-4 { grid-template-columns: 1fr; }
+            .container { padding: 15px 10px; }
+            .btn-row { flex-direction: column; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>&#128200; Internal Cost Calculator</h1>
+            <p>Solar Sparks Innovation - Expense & Profit Analysis</p>
+            <a href="/" class="nav-link">&larr; Back to Quotation Generator</a>
+        </div>
+
+        <form id="calcForm">
+            <div class="card">
+                <h2>Project Entries</h2>
+                <div class="entry-count-section">
+                    <label>Number of Entries:</label>
+                    <select id="numEntries" onchange="updateEntries()">
+                        <option value="1" selected>1</option>
+                        <option value="2">2</option>
+                        <option value="3">3</option>
+                        <option value="4">4</option>
+                        <option value="5">5</option>
+                    </select>
+                </div>
+
+                <div id="entriesContainer"></div>
+            </div>
+
+            <div class="card btn-row">
+                <button type="button" class="submit-btn" onclick="calculateCosts()">&#128202; Calculate Costs</button>
+                <button type="button" class="excel-btn" onclick="downloadExcel()">&#128196; Export to Excel</button>
+            </div>
+        </form>
+
+        <!-- Results displayed here -->
+        <div id="resultsSection" class="results-section">
+            <div class="card">
+                <h2>Cost Breakdown & Profit Analysis</h2>
+                <div id="resultsContent"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const PANEL_RATES = { domestic: 26.75, commercial: 15.50 };
+        const INVERTER_COSTS = { "1Phase": 18000, "3Phase": 55000 };
+
+        function createEntryBlock(index) {
+            const num = index + 1;
+            const defaultRate = PANEL_RATES.domestic;
+            return `
+                <div class="entry-block" id="entry_${index}">
+                    <h3>Entry ${num}</h3>
+                    ${index > 0 ? `<button type="button" class="remove-entry" onclick="removeEntry(${index})" title="Remove">&times;</button>` : ''}
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Customer Type *</label>
+                            <select name="type_${index}" onchange="updateDefaults(${index})">
+                                <option value="domestic">Domestic</option>
+                                <option value="commercial">Commercial</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>System Size (kW) *</label>
+                            <input type="number" name="kw_${index}" step="0.1" min="0.5" required placeholder="e.g., 3"
+                                   onchange="autoCalcPanelCost(${index})">
+                        </div>
+                    </div>
+                    <div class="form-row-3">
+                        <div class="form-group">
+                            <label>Panel Price per Watt (Rs.)</label>
+                            <input type="number" name="panel_rate_${index}" step="0.01" min="0" value="${defaultRate}"
+                                   placeholder="Before GST" onchange="autoCalcPanelCost(${index})">
+                            <div class="hint">Before GST. Default auto-set by type</div>
+                        </div>
+                        <div class="form-group">
+                            <label>Phase</label>
+                            <select name="phase_${index}" onchange="updateInverterDisplay(${index})">
+                                <option value="1Phase">1 Phase</option>
+                                <option value="3Phase">3 Phase</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Inverter Cost (Rs.)</label>
+                            <input type="number" name="inverter_${index}" min="0" value="${INVERTER_COSTS['1Phase']}"
+                                   placeholder="Before GST">
+                            <div class="hint">Before GST. Default by phase</div>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Selling Price to Customer (Rs.) *</label>
+                            <input type="number" name="selling_${index}" min="0" required placeholder="e.g., 200000">
+                            <div class="hint">What you quote the customer (incl GST)</div>
+                        </div>
+                        <div class="form-group">
+                            <label>Est. Panel Cost (Auto)</label>
+                            <input type="text" id="panel_cost_display_${index}" class="auto-field" readonly
+                                   value="-" tabindex="-1">
+                            <div class="hint">Panels cost + 12% GST (auto-calculated)</div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function updateDefaults(index) {
+            const type = document.querySelector(`[name="type_${index}"]`).value;
+            document.querySelector(`[name="panel_rate_${index}"]`).value = PANEL_RATES[type];
+            autoCalcPanelCost(index);
+        }
+
+        function updateInverterDisplay(index) {
+            const phase = document.querySelector(`[name="phase_${index}"]`).value;
+            document.querySelector(`[name="inverter_${index}"]`).value = INVERTER_COSTS[phase];
+        }
+
+        function autoCalcPanelCost(index) {
+            const kw = parseFloat(document.querySelector(`[name="kw_${index}"]`).value) || 0;
+            const rate = parseFloat(document.querySelector(`[name="panel_rate_${index}"]`).value) || 0;
+            if (kw > 0 && rate > 0) {
+                const numPanels = Math.ceil((kw * 1000) / 550);
+                const totalWp = numPanels * 550;
+                const cost = totalWp * rate;
+                const withGst = cost * 1.12;
+                document.getElementById(`panel_cost_display_${index}`).value =
+                    `${numPanels} panels x ${totalWp}Wp = Rs.${Math.round(withGst).toLocaleString('en-IN')} (incl GST)`;
+            } else {
+                document.getElementById(`panel_cost_display_${index}`).value = '-';
+            }
+        }
+
+        function updateEntries() {
+            const count = parseInt(document.getElementById('numEntries').value);
+            const container = document.getElementById('entriesContainer');
+            container.innerHTML = '';
+            for (let i = 0; i < count; i++) {
+                container.innerHTML += createEntryBlock(i);
+            }
+        }
+
+        function removeEntry(index) {
+            const select = document.getElementById('numEntries');
+            const current = parseInt(select.value);
+            if (current > 1) {
+                select.value = current - 1;
+                updateEntries();
+            }
+        }
+
+        function gatherFormData() {
+            const count = parseInt(document.getElementById('numEntries').value);
+            const entries = [];
+            for (let i = 0; i < count; i++) {
+                const kw = parseFloat(document.querySelector(`[name="kw_${i}"]`).value);
+                const type = document.querySelector(`[name="type_${i}"]`).value;
+                const phase = document.querySelector(`[name="phase_${i}"]`).value;
+                const panelRate = parseFloat(document.querySelector(`[name="panel_rate_${i}"]`).value);
+                const inverter = parseFloat(document.querySelector(`[name="inverter_${i}"]`).value);
+                const selling = parseFloat(document.querySelector(`[name="selling_${i}"]`).value) || 0;
+
+                if (!kw || kw <= 0) {
+                    alert(`Please enter valid kW for Entry ${i + 1}`);
+                    return null;
+                }
+                entries.push({
+                    kw: kw,
+                    customer_type: type,
+                    phase: phase,
+                    panel_price_per_watt: panelRate || null,
+                    inverter_price: inverter || null,
+                    selling_price: selling
+                });
+            }
+            return entries;
+        }
+
+        function formatINR(num) {
+            return num.toLocaleString('en-IN');
+        }
+
+        function calculateCosts() {
+            const entries = gatherFormData();
+            if (!entries) return;
+
+            fetch('/calculate', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ entries: entries })
+            })
+            .then(r => r.json())
+            .then(data => {
+                displayResults(data.results);
+            })
+            .catch(err => alert('Error calculating costs: ' + err));
+        }
+
+        function displayResults(results) {
+            const section = document.getElementById('resultsSection');
+            const content = document.getElementById('resultsContent');
+            let html = '';
+
+            results.forEach((r, idx) => {
+                html += `
+                <h3 style="color:#1a3a5c; margin:20px 0 10px; font-size:1.15em;">
+                    Entry ${idx + 1}: ${r.kw}kW ${r.customer_type.charAt(0).toUpperCase() + r.customer_type.slice(1)} (${r.phase})
+                </h3>
+                <table class="result-table">
+                    <thead>
+                        <tr>
+                            <th style="width:50%">Component</th>
+                            <th style="width:16%">Amount</th>
+                            <th style="width:16%">GST</th>
+                            <th style="width:18%">Total</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr class="section-row"><td colspan="4">SOLAR PANELS</td></tr>
+                        <tr>
+                            <td>${r.num_panels} panels &times; 550Wp = ${r.total_wp}Wp @ Rs.${r.panel_price_per_watt}/Wp</td>
+                            <td>Rs.${formatINR(r.panel_cost_before_gst)}</td>
+                            <td>Rs.${formatINR(r.panel_gst)}</td>
+                            <td>Rs.${formatINR(r.panel_cost_total)}</td>
+                        </tr>
+                        <tr class="section-row"><td colspan="4">INVERTER</td></tr>
+                        <tr>
+                            <td>Grid Tied Inverter (${r.phase})</td>
+                            <td>Rs.${formatINR(r.inverter_price)}</td>
+                            <td>Rs.${formatINR(r.inverter_gst)}</td>
+                            <td>Rs.${formatINR(r.inverter_total)}</td>
+                        </tr>
+                        <tr class="section-row"><td colspan="4">OTHER COMPONENTS & SERVICES</td></tr>`;
+
+                for (const [key, val] of Object.entries(r.other_items)) {
+                    const label = key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+                    html += `<tr><td>${label}</td><td>Rs.${formatINR(val)}</td><td></td><td></td></tr>`;
+                }
+
+                html += `
+                        <tr style="font-weight:600;">
+                            <td>Other Components Subtotal</td>
+                            <td>Rs.${formatINR(r.other_total_before_gst)}</td>
+                            <td>Rs.${formatINR(r.other_gst)}</td>
+                            <td>Rs.${formatINR(r.other_total)}</td>
+                        </tr>
+                        <tr class="total-row">
+                            <td>TOTAL COST (Incl. GST)</td>
+                            <td></td><td></td>
+                            <td>Rs.${formatINR(r.total_cost)}</td>
+                        </tr>
+                        <tr class="section-row"><td colspan="4">PROFIT ANALYSIS</td></tr>
+                        <tr>
+                            <td>Selling Price (Quote to Customer)</td>
+                            <td></td><td></td>
+                            <td>Rs.${formatINR(r.selling_price)}</td>
+                        </tr>
+                        <tr>
+                            <td>Total Cost</td>
+                            <td></td><td></td>
+                            <td>Rs.${formatINR(r.total_cost)}</td>
+                        </tr>
+                        <tr class="${r.profit >= 0 ? 'profit-row-positive' : 'profit-row-negative'}">
+                            <td>PROFIT / LOSS</td>
+                            <td></td><td></td>
+                            <td>Rs.${formatINR(r.profit)} (${r.margin_pct}%)</td>
+                        </tr>
+                    </tbody>
+                </table>`;
+            });
+
+            content.innerHTML = html;
+            section.classList.add('active');
+            section.scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function downloadExcel() {
+            const entries = gatherFormData();
+            if (!entries) return;
+
+            fetch('/calculate-excel', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ entries: entries })
+            })
+            .then(r => {
+                if (!r.ok) throw new Error('Server error');
+                return r.blob();
+            })
+            .then(blob => {
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'Solar_Cost_Analysis.xlsx';
+                document.body.appendChild(a);
+                a.click();
+                a.remove();
+                window.URL.revokeObjectURL(url);
+            })
+            .catch(err => alert('Error downloading Excel: ' + err));
+        }
+
+        // Initialize
+        updateEntries();
+    </script>
+</body>
+</html>

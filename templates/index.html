@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Solar Quotation Generator - Solar Sparks Innovation</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
+            min-height: 100vh;
+            color: #333;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 30px 20px;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            color: white;
+        }
+        .header h1 {
+            font-size: 2em;
+            margin-bottom: 5px;
+            color: #f4a261;
+        }
+        .header p {
+            font-size: 1em;
+            opacity: 0.8;
+        }
+        .card {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            margin-bottom: 20px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.15);
+        }
+        .card h2 {
+            color: #1a3a5c;
+            font-size: 1.3em;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #f4a261;
+        }
+        .form-group {
+            margin-bottom: 18px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 6px;
+            font-weight: 600;
+            color: #1a3a5c;
+            font-size: 0.9em;
+        }
+        .form-group input, .form-group select, .form-group textarea {
+            width: 100%;
+            padding: 10px 14px;
+            border: 2px solid #e0e6ed;
+            border-radius: 8px;
+            font-size: 0.95em;
+            transition: border-color 0.2s;
+            font-family: inherit;
+        }
+        .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+            outline: none;
+            border-color: #f4a261;
+            box-shadow: 0 0 0 3px rgba(244, 162, 97, 0.15);
+        }
+        .form-group textarea {
+            resize: vertical;
+            min-height: 70px;
+        }
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+        .form-row-3 {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 15px;
+        }
+        .connection-block {
+            background: #f8f9fc;
+            border: 2px solid #e0e6ed;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 15px;
+            position: relative;
+        }
+        .connection-block h3 {
+            color: #2d6a4f;
+            margin-bottom: 15px;
+            font-size: 1.1em;
+        }
+        .remove-conn {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: #e74c3c;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 28px;
+            height: 28px;
+            font-size: 1.1em;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.2s;
+        }
+        .remove-conn:hover { background: #c0392b; }
+        .add-conn-btn {
+            background: #2d6a4f;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-size: 0.95em;
+            cursor: pointer;
+            transition: background 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .add-conn-btn:hover { background: #1e4d38; }
+        .submit-btn {
+            background: linear-gradient(135deg, #f4a261, #e76f51);
+            color: white;
+            border: none;
+            padding: 14px 40px;
+            border-radius: 10px;
+            font-size: 1.1em;
+            font-weight: 700;
+            cursor: pointer;
+            width: 100%;
+            transition: transform 0.2s, box-shadow 0.2s;
+            letter-spacing: 0.5px;
+        }
+        .submit-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(231, 111, 81, 0.4);
+        }
+        .hint {
+            font-size: 0.8em;
+            color: #7f8c8d;
+            margin-top: 4px;
+        }
+        .conn-count-section {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+        .conn-count-section label {
+            font-weight: 600;
+            color: #1a3a5c;
+            white-space: nowrap;
+        }
+        .conn-count-section select {
+            width: auto;
+            padding: 8px 14px;
+            border: 2px solid #e0e6ed;
+            border-radius: 8px;
+            font-size: 0.95em;
+        }
+        @media (max-width: 600px) {
+            .form-row, .form-row-3 { grid-template-columns: 1fr; }
+            .container { padding: 15px 10px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>&#9728; Solar Quotation Generator</h1>
+            <p>Solar Sparks Innovation - Generate Professional Solar Proposals</p>
+            <a href="/calculator" style="display:inline-block;margin-top:10px;color:#f4a261;text-decoration:none;font-size:0.9em;">&#128200; Internal Cost Calculator &rarr;</a>
+        </div>
+
+        <form method="POST" action="/generate" id="quoteForm">
+            <!-- Consumer Details -->
+            <div class="card">
+                <h2>Consumer Details</h2>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Consumer Full Name *</label>
+                        <input type="text" name="consumer_name" required placeholder="e.g., B. MANIKANDAN">
+                    </div>
+                    <div class="form-group">
+                        <label>Proposal Date *</label>
+                        <input type="date" name="proposal_date" required value="{{ today }}">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Consumer Address *</label>
+                    <textarea name="consumer_address" required placeholder="e.g., Annai Avenue, 3rd Street, Chennai"></textarea>
+                </div>
+            </div>
+
+            <!-- EB Connections -->
+            <div class="card">
+                <h2>EB Connections</h2>
+                <div class="conn-count-section">
+                    <label>Number of EB Connections:</label>
+                    <select id="numConnections" onchange="updateConnections()">
+                        <option value="1" selected>1</option>
+                        <option value="2">2</option>
+                        <option value="3">3</option>
+                        <option value="4">4</option>
+                        <option value="5">5</option>
+                    </select>
+                </div>
+                <input type="hidden" name="num_connections" id="numConnectionsHidden" value="1">
+
+                <div id="connectionsContainer">
+                    <!-- Connection blocks will be added here -->
+                </div>
+            </div>
+
+            <!-- Submit -->
+            <div class="card" style="text-align:center;">
+                <button type="submit" class="submit-btn">&#128196; Generate Solar Proposal PDF</button>
+            </div>
+        </form>
+    </div>
+
+    <script>
+        function createConnectionBlock(index) {
+            const num = index + 1;
+            return `
+                <div class="connection-block" id="conn_${index}">
+                    <h3>EB Connection ${num}</h3>
+                    ${index > 0 ? `<button type="button" class="remove-conn" onclick="removeConnection(${index})" title="Remove">&times;</button>` : ''}
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>EB Number *</label>
+                            <input type="text" name="eb_number_${index}" required placeholder="e.g., 010760104329">
+                        </div>
+                        <div class="form-group">
+                            <label>Proposed kW Capacity *</label>
+                            <input type="number" name="kw_${index}" step="0.1" min="0.5" required placeholder="e.g., 3.2">
+                            <div class="hint">System size in kilowatts</div>
+                        </div>
+                    </div>
+                    <div class="form-row-3">
+                        <div class="form-group">
+                            <label>Total Price (incl. GST) *</label>
+                            <input type="number" name="price_${index}" min="1000" required placeholder="e.g., 200000">
+                            <div class="hint">Total amount in Rs.</div>
+                        </div>
+                        <div class="form-group">
+                            <label>Yearly Consumption (units) *</label>
+                            <input type="number" name="consumption_${index}" min="1" required placeholder="e.g., 5430">
+                            <div class="hint">Average annual units from EB bill</div>
+                        </div>
+                        <div class="form-group">
+                            <label>Phase</label>
+                            <select name="phase_${index}">
+                                <option value="1Phase">1 Phase</option>
+                                <option value="3Phase">3 Phase</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function updateConnections() {
+            const count = parseInt(document.getElementById('numConnections').value);
+            document.getElementById('numConnectionsHidden').value = count;
+            const container = document.getElementById('connectionsContainer');
+            container.innerHTML = '';
+            for (let i = 0; i < count; i++) {
+                container.innerHTML += createConnectionBlock(i);
+            }
+        }
+
+        function removeConnection(index) {
+            const select = document.getElementById('numConnections');
+            const currentCount = parseInt(select.value);
+            if (currentCount > 1) {
+                select.value = currentCount - 1;
+                updateConnections();
+            }
+        }
+
+        // Initialize with 1 connection
+        updateConnections();
+    </script>
+</body>
+</html>
