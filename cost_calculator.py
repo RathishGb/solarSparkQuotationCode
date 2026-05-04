@@ -12,34 +12,46 @@ from openpyxl.styles import Font, PatternFill, Alignment, Border, Side, numbers
 
 
 # ─── Cost Constants ───
-PANEL_WATT = 550  # Wp per panel
+PANEL_WATT = 610  # Wp per panel
 
 # Panel price per watt (before GST)
 PANEL_RATE = {
     "domestic": 26.75,     # Rs/Wp for domestic (DCR panels)
     "commercial": 15.50,   # Rs/Wp for commercial
 }
-PANEL_GST = 0.12  # 12% GST on panels
+# GST rates for panel: 70% at 5%, 30% at 12%
+PANEL_GST_70 = 0.05
+PANEL_GST_30 = 0.18
 
-# Inverter cost
+# Inverter cost (base price before GST)
 INVERTER_COST = {
-    "1Phase": 18000,
+    "1Phase": {
+        3: 15500,
+        4: 19300,
+        5: 25500,
+        "default": 18000,
+    },
     "3Phase": 55000,
 }
 
 # Other component costs (approximate per kW)
 OTHER_COSTS_PER_KW = {
-    "mounting_structure": 4000,
+    "mounting_structure": 6000,
     "dc_distribution_box": 800,
     "ac_distribution_board": 1200,
     "earthing_system": 1500,
     "cables_ac_dc": 2500,
     "monitoring_system": 500,
-    "installation_labour": 3000,
-    "civil_works": 2000,
+    # The following are now part of fixed non-GST cost:
+    # "installation_labour": 3000,
+    # "civil_works": 2000,
+    # "transport": 1000,
+    # Miscellaneous GST-applicable items can be added here
     "net_metering_liaison": 1500,
-    "transport": 1000,
 }
+
+# Fixed non-GST cost for labor, delivery, installation, civil work
+FIXED_NON_GST_COST = 30000
 
 
 def calculate_costs(kw, customer_type, phase, panel_price_per_watt=None,
@@ -64,17 +76,33 @@ def calculate_costs(kw, customer_type, phase, panel_price_per_watt=None,
     if panel_price_per_watt is None:
         panel_price_per_watt = PANEL_RATE.get(customer_type, PANEL_RATE["domestic"])
 
+
     panel_cost_before_gst = total_wp * panel_price_per_watt
-    panel_gst = panel_cost_before_gst * PANEL_GST
+    # GST: 70% at 5%, 30% at 12%
+    panel_cost_70 = panel_cost_before_gst * 0.7
+    panel_cost_30 = panel_cost_before_gst * 0.3
+    panel_gst_70 = panel_cost_70 * PANEL_GST_70
+    panel_gst_30 = panel_cost_30 * PANEL_GST_30
+    panel_gst = panel_gst_70 + panel_gst_30
     panel_cost_total = panel_cost_before_gst + panel_gst
+
 
     # Inverter
     if inverter_price is None:
-        inverter_price = INVERTER_COST.get(phase, INVERTER_COST["1Phase"])
-    inverter_gst = inverter_price * 0.12
+        if phase == "1Phase":
+            # Use special rates for 3, 4, 5 kW
+            kw_rounded = round(kw)
+            if kw_rounded in INVERTER_COST["1Phase"]:
+                inverter_price = INVERTER_COST["1Phase"][kw_rounded]
+            else:
+                inverter_price = INVERTER_COST["1Phase"]["default"]
+        else:
+            inverter_price = INVERTER_COST.get(phase, INVERTER_COST["3Phase"])
+    inverter_gst = inverter_price * 0.18
     inverter_total = inverter_price + inverter_gst
 
-    # Other costs
+
+    # Other costs (GST-applicable only)
     other_items = {}
     other_total = 0
     for item, rate in OTHER_COSTS_PER_KW.items():
@@ -85,10 +113,17 @@ def calculate_costs(kw, customer_type, phase, panel_price_per_watt=None,
     other_gst = round(other_total * 0.18)  # 18% GST on services
     other_total_with_gst = other_total + other_gst
 
+    # Fixed non-GST cost
+    non_gst_items = {
+        "labour_delivery_installation_civil": FIXED_NON_GST_COST
+    }
+    non_gst_total = FIXED_NON_GST_COST
+
+
     # Totals
-    total_cost_before_gst = panel_cost_before_gst + inverter_price + other_total
+    total_cost_before_gst = panel_cost_before_gst + inverter_price + other_total + non_gst_total
     total_gst = panel_gst + inverter_gst + other_gst
-    total_cost = panel_cost_total + inverter_total + other_total_with_gst
+    total_cost = panel_cost_total + inverter_total + other_total_with_gst + non_gst_total
 
     # Profit
     profit = selling_price - total_cost if selling_price > 0 else 0
@@ -102,6 +137,8 @@ def calculate_costs(kw, customer_type, phase, panel_price_per_watt=None,
         "total_wp": total_wp,
         "panel_price_per_watt": panel_price_per_watt,
         "panel_cost_before_gst": round(panel_cost_before_gst),
+        "panel_gst_70": round(panel_gst_70),
+        "panel_gst_30": round(panel_gst_30),
         "panel_gst": round(panel_gst),
         "panel_cost_total": round(panel_cost_total),
         "inverter_price": inverter_price,
@@ -111,12 +148,39 @@ def calculate_costs(kw, customer_type, phase, panel_price_per_watt=None,
         "other_total_before_gst": other_total,
         "other_gst": other_gst,
         "other_total": other_total_with_gst,
+        "non_gst_items": non_gst_items,
+        "non_gst_total": non_gst_total,
         "total_cost_before_gst": round(total_cost_before_gst),
         "total_gst": round(total_gst),
         "total_cost": round(total_cost),
         "selling_price": selling_price,
         "profit": round(profit),
         "margin_pct": round(margin_pct, 1),
+        "cost_breakup": {
+            "gst_component": {
+                "panel": {
+                    "base": round(panel_cost_before_gst),
+                    "gst_70": round(panel_gst_70),
+                    "gst_30": round(panel_gst_30),
+                    "total": round(panel_cost_total),
+                },
+                "inverter": {
+                    "base": round(inverter_price),
+                    "gst": round(inverter_gst),
+                    "total": round(inverter_total),
+                },
+                "other": {
+                    "base": other_total,
+                    "gst": other_gst,
+                    "total": other_total_with_gst,
+                },
+                "total_gst": round(total_gst),
+            },
+            "non_gst_component": {
+                "items": non_gst_items,
+                "total": non_gst_total,
+            }
+        }
     }
 
 

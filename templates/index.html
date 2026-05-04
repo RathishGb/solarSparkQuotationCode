@@ -230,12 +230,13 @@
     </div>
 
     <script>
+
         function createConnectionBlock(index) {
             const num = index + 1;
             return `
                 <div class="connection-block" id="conn_${index}">
                     <h3>EB Connection ${num}</h3>
-                    ${index > 0 ? `<button type="button" class="remove-conn" onclick="removeConnection(${index})" title="Remove">&times;</button>` : ''}
+                    ${index > 0 ? `<button type="button" class="remove-conn" data-index="${index}" title="Remove">&times;</button>` : ''}
                     <div class="form-row">
                         <div class="form-group">
                             <label>EB Number *</label>
@@ -266,6 +267,41 @@
                             </select>
                         </div>
                     </div>
+                    <div class="form-row-3">
+                        <div class="form-group">
+                            <label>Number of Panels *</label>
+                            <input type="number" name="num_panels_${index}" min="1" required placeholder="e.g., 6">
+                            <div class="hint">Total number of panels</div>
+                        </div>
+                        <div class="form-group">
+                            <label>Panel Watt (Wp) *</label>
+                            <input type="number" name="panel_watt_${index}" min="1" required placeholder="e.g., 610" value="610">
+                            <div class="hint">Enter panel wattage used</div>
+                        </div>
+                        <div class="form-group">
+                            <label>Inverter *</label>
+                            <input type="text" name="inverter_${index}" required placeholder="e.g., Growatt, EVVO, Polycab">
+                            <div class="hint">Inverter make/model</div>
+                        </div>
+                        <div class="form-group">
+                            <label>Inverter kW Used *</label>
+                            <input type="number" name="inverter_kw_${index}" min="0.1" step="0.01" required placeholder="e.g., 5.0">
+                            <div class="hint">Enter inverter kW capacity used</div>
+                        </div>
+                        <div class="form-group">
+                            <label>Panel Type *</label>
+                            <div class="panel-type-group" style="display:flex;gap:10px;">
+                                <button type="button" class="panel-type-btn topcon-btn" data-index="${index}" data-type="TopCon" style="flex:1;border:2px solid #e0e6ed;padding:8px 0;border-radius:6px;background:#f8f9fc;color:#1a3a5c;font-weight:600;cursor:pointer;">TopCon</button>
+                                <button type="button" class="panel-type-btn bifacial-btn" data-index="${index}" data-type="Bifacial" style="flex:1;border:2px solid #e0e6ed;padding:8px 0;border-radius:6px;background:#f8f9fc;color:#1a3a5c;font-weight:600;cursor:pointer;">Bifacial Mono PERC</button>
+                                <input type="hidden" name="panel_type_${index}" class="panel-type-input" value="TopCon">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>Panel Brand *</label>
+                            <input type="text" name="panel_brand_${index}" required placeholder="e.g., Waree, Gautam, Luminous">
+                            <div class="hint">Brand of panels being installed</div>
+                        </div>
+                    </div>
                 </div>
             `;
         }
@@ -274,23 +310,88 @@
             const count = parseInt(document.getElementById('numConnections').value);
             document.getElementById('numConnectionsHidden').value = count;
             const container = document.getElementById('connectionsContainer');
-            container.innerHTML = '';
+            let html = '';
             for (let i = 0; i < count; i++) {
-                container.innerHTML += createConnectionBlock(i);
+                html += createConnectionBlock(i);
+            }
+            container.innerHTML = html;
+            attachEventListeners();
+            initializePanelTypes();
+        }
+
+        function initializePanelTypes() {
+            const topconBtns = document.querySelectorAll('.topcon-btn');
+            topconBtns.forEach(btn => {
+                const index = btn.dataset.index;
+                const bifacialBtn = document.querySelector(`.bifacial-btn[data-index="${index}"]`);
+                btn.style.background = '#2d6a4f';
+                btn.style.color = 'white';
+                btn.style.border = '2px solid #2d6a4f';
+                if (bifacialBtn) {
+                    bifacialBtn.style.background = '#f8f9fc';
+                    bifacialBtn.style.color = '#1a3a5c';
+                    bifacialBtn.style.border = '2px solid #e0e6ed';
+                }
+            });
+        }
+
+        function attachEventListeners() {
+            // Panel type buttons
+            document.querySelectorAll('.panel-type-btn').forEach(btn => {
+                btn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const index = this.dataset.index;
+                    const type = this.dataset.type;
+                    selectPanelType(index, type);
+                });
+            });
+
+            // Remove connection buttons
+            document.querySelectorAll('.remove-conn').forEach(btn => {
+                btn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const select = document.getElementById('numConnections');
+                    const current = parseInt(select.value);
+                    if (current > 1) {
+                        select.value = current - 1;
+                        updateConnections();
+                    }
+                });
+            });
+        }
+
+        function selectPanelType(index, type) {
+            const topconBtn = document.querySelector(`.topcon-btn[data-index="${index}"]`);
+            const bifacialBtn = document.querySelector(`.bifacial-btn[data-index="${index}"]`);
+            const input = document.querySelector(`input[name="panel_type_${index}"].panel-type-input`);
+            
+            if (!topconBtn || !bifacialBtn || !input) return;
+
+            if (type === 'TopCon') {
+                topconBtn.style.background = '#2d6a4f';
+                topconBtn.style.color = 'white';
+                topconBtn.style.border = '2px solid #2d6a4f';
+                bifacialBtn.style.background = '#f8f9fc';
+                bifacialBtn.style.color = '#1a3a5c';
+                bifacialBtn.style.border = '2px solid #e0e6ed';
+                input.value = 'TopCon';
+            } else {
+                bifacialBtn.style.background = '#2d6a4f';
+                bifacialBtn.style.color = 'white';
+                bifacialBtn.style.border = '2px solid #2d6a4f';
+                topconBtn.style.background = '#f8f9fc';
+                topconBtn.style.color = '#1a3a5c';
+                topconBtn.style.border = '2px solid #e0e6ed';
+                input.value = 'Bifacial Mono PERC';
             }
         }
 
-        function removeConnection(index) {
-            const select = document.getElementById('numConnections');
-            const currentCount = parseInt(select.value);
-            if (currentCount > 1) {
-                select.value = currentCount - 1;
-                updateConnections();
-            }
-        }
-
-        // Initialize with 1 connection
-        updateConnections();
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            const numConnectionsSelect = document.getElementById('numConnections');
+            numConnectionsSelect.addEventListener('change', updateConnections);
+            updateConnections();
+        });
     </script>
 </body>
 </html>

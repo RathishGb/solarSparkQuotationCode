@@ -29,14 +29,21 @@ def generate():
         return "All consumer fields are required.", 400
 
     connections = []
+
     for i in range(num_connections):
         eb = request.form.get(f"eb_number_{i}", "").strip()
         kw = request.form.get(f"kw_{i}", "").strip()
         price = request.form.get(f"price_{i}", "").strip()
         consumption = request.form.get(f"consumption_{i}", "").strip()
         phase = request.form.get(f"phase_{i}", "1Phase").strip()
+        num_panels = request.form.get(f"num_panels_{i}", "").strip()
+        panel_watt = request.form.get(f"panel_watt_{i}", "610").strip()
+        panel_brand = request.form.get(f"panel_brand_{i}", "").strip()
+        panel_type = request.form.get(f"panel_type_{i}", "").strip()
+        inverter = request.form.get(f"inverter_{i}", "").strip()
+        inverter_kw = request.form.get(f"inverter_kw_{i}", "").strip()
 
-        if not eb or not kw or not price or not consumption:
+        if not eb or not kw or not price or not consumption or not num_panels or not panel_watt:
             return f"All fields for connection {i+1} are required.", 400
 
         connections.append({
@@ -45,6 +52,12 @@ def generate():
             "price": int(float(price)),
             "consumption": int(float(consumption)),
             "phase": phase,
+            "num_panels": int(num_panels),
+            "panel_watt": int(panel_watt),
+            "panel_brand": panel_brand,
+            "panel_type": panel_type,
+            "inverter": inverter,
+            "inverter_kw": float(inverter_kw) if inverter_kw else None,
         })
 
     data = {
@@ -124,6 +137,37 @@ def calculate_excel():
         download_name="Solar_Cost_Analysis.xlsx",
     )
 
+
+from tneb_fetcher import TNEBConsumerFetcher
+from solar_recommendation import SolarRecommendationEngine
+
+fetcher = TNEBConsumerFetcher()
+solar_engine = SolarRecommendationEngine()
+
+@app.route("/tneb-search-page", methods=["GET"])
+def tneb_search_page():
+    return render_template("tneb_search.html")
+
+@app.route("/tneb-search", methods=["POST"])
+def tneb_search():
+    data = request.get_json()
+    eb_number = data.get("eb_number", "").strip()
+    panel_watt = data.get("panel_watt")
+    if not eb_number:
+        return jsonify({"error": "EB number is required."}), 400
+    if not panel_watt:
+        return jsonify({"error": "Panel watt is required."}), 400
+    consumer = fetcher.fetch_consumer_details(eb_number)
+    if not consumer:
+        return jsonify({"error": "Consumer not found or invalid EB number."}), 404
+    monthly_units = consumer.get("average_monthly_consumption")
+    rec = solar_engine.recommend_solar_kw(monthly_units, consumer_type="domestic", coverage="balanced")
+    return jsonify({
+        "consumer": consumer,
+        "solar_kw": round(rec["recommended_kw"], 2) if rec else None,
+        "recommendation": rec["summary"] if rec else "No recommendation.",
+        "panel_watt": panel_watt
+    })
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))

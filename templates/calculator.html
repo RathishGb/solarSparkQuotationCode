@@ -369,8 +369,8 @@
             const kw = parseFloat(document.querySelector(`[name="kw_${index}"]`).value) || 0;
             const rate = parseFloat(document.querySelector(`[name="panel_rate_${index}"]`).value) || 0;
             if (kw > 0 && rate > 0) {
-                const numPanels = Math.ceil((kw * 1000) / 550);
-                const totalWp = numPanels * 550;
+                const numPanels = Math.ceil((kw * 1000) / 610);
+                const totalWp = numPanels * 610;
                 const cost = totalWp * rate;
                 const withGst = cost * 1.12;
                 document.getElementById(`panel_cost_display_${index}`).value =

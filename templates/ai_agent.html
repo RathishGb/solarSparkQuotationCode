@@ -1,0 +1,531 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SolarSpark AI Agent - TNEB Consultation</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 5px;
+        }
+
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .card {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            margin-bottom: 20px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #333;
+            font-weight: 600;
+            font-size: 0.95em;
+        }
+
+        input[type="text"],
+        select {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 1em;
+            transition: all 0.3s;
+        }
+
+        input[type="text"]:focus,
+        select:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 14px 30px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            width: 100%;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-primary:active {
+            transform: translateY(0);
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 30px;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 15px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .result {
+            display: none;
+            margin-top: 30px;
+        }
+
+        .result.show {
+            display: block;
+        }
+
+        .result-section {
+            margin-bottom: 25px;
+            padding-bottom: 25px;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .result-section:last-child {
+            border-bottom: none;
+        }
+
+        .result-title {
+            font-size: 1.2em;
+            font-weight: 700;
+            color: #333;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+        }
+
+        .result-title span {
+            font-size: 1.5em;
+            margin-right: 10px;
+        }
+
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+        }
+
+        .info-card {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 4px solid #667eea;
+        }
+
+        .info-label {
+            color: #666;
+            font-size: 0.85em;
+            margin-bottom: 5px;
+        }
+
+        .info-value {
+            font-size: 1.3em;
+            font-weight: 700;
+            color: #333;
+        }
+
+        .recommendation-box {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 25px;
+            border-radius: 10px;
+            text-align: center;
+            margin: 20px 0;
+        }
+
+        .recommendation-box .label {
+            font-size: 0.95em;
+            opacity: 0.9;
+            margin-bottom: 10px;
+        }
+
+        .recommendation-box .value {
+            font-size: 2.5em;
+            font-weight: 700;
+        }
+
+        .options {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .option-item {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .option-name {
+            font-weight: 600;
+            color: #667eea;
+            margin-bottom: 8px;
+        }
+
+        .option-value {
+            font-size: 1.5em;
+            font-weight: 700;
+            color: #333;
+        }
+
+        .error {
+            background: #fee;
+            color: #c33;
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 4px solid #c33;
+            display: none;
+        }
+
+        .error.show {
+            display: block;
+        }
+
+        .next-steps {
+            background: #e8f5e9;
+            padding: 20px;
+            border-radius: 8px;
+            border-left: 4px solid #4caf50;
+        }
+
+        .next-steps h3 {
+            color: #2e7d32;
+            margin-bottom: 15px;
+        }
+
+        .next-steps ol {
+            margin-left: 20px;
+            color: #1b5e20;
+        }
+
+        .next-steps li {
+            margin-bottom: 10px;
+            line-height: 1.6;
+        }
+
+        .conversation-log {
+            background: #f5f5f5;
+            padding: 15px;
+            border-radius: 8px;
+            max-height: 200px;
+            overflow-y: auto;
+            font-size: 0.9em;
+            color: #666;
+        }
+
+        .log-item {
+            padding: 5px 0;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .log-item:last-child {
+            border-bottom: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🤖 SolarSpark AI Agent</h1>
+            <p>TNEB Consumption Analysis & Solar Recommendation</p>
+        </div>
+
+        <div class="card">
+            <h2 style="margin-bottom: 25px; color: #333;">📋 Consumer Details</h2>
+            
+            <form id="consultationForm">
+                <div class="form-group">
+                    <label for="ebNumber">TNEB EB Number *</label>
+                    <input type="text" id="ebNumber" name="ebNumber" 
+                           placeholder="e.g., 333333333330001" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="recommendation">Recommendation Type</label>
+                    <select id="recommendation" name="recommendation">
+                        <option value="conservative">Conservative (50% coverage)</option>
+                        <option value="balanced" selected>Balanced (75% coverage)</option>
+                        <option value="aggressive">Aggressive (100% coverage)</option>
+                    </select>
+                </div>
+
+                <button type="submit" class="btn-primary">🔍 Analyze & Get Recommendation</button>
+            </form>
+
+            <div class="loading" id="loading">
+                <div class="spinner"></div>
+                <p>Consulting AI Agent... Fetching TNEB data and analyzing...</p>
+            </div>
+
+            <div class="error" id="errorMessage"></div>
+
+            <div class="result" id="result">
+                <!-- Results will be populated here -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const form = document.getElementById('consultationForm');
+        const ebInput = document.getElementById('ebNumber');
+        const loading = document.getElementById('loading');
+        const errorDiv = document.getElementById('errorMessage');
+        const resultDiv = document.getElementById('result');
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const ebNumber = ebInput.value.trim();
+            const recommendationType = document.getElementById('recommendation').value;
+
+            if (!ebNumber) {
+                showError('Please enter a valid EB number');
+                return;
+            }
+
+            showLoading(true);
+            errorDiv.classList.remove('show');
+            resultDiv.classList.remove('show');
+
+            try {
+                const response = await fetch('/api/analyze-eb', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        eb_number: ebNumber,
+                        recommendation_type: recommendationType
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    displayResults(data);
+                    resultDiv.classList.add('show');
+                } else {
+                    showError(data.error || 'Failed to analyze EB number');
+                }
+            } catch (error) {
+                showError(`Error: ${error.message}`);
+            } finally {
+                showLoading(false);
+            }
+        });
+
+        function displayResults(data) {
+            const consumer = data.consumer_info;
+            const consumption = data.consumption_analysis;
+            const recommendation = data.solar_recommendation;
+            const tnebRate = recommendation.tneb_rate_information || {};
+            const rateSlab = recommendation.rate_slab_insights || {};
+
+            let html = `
+                <!-- Consumer Info -->
+                <div class="result-section">
+                    <div class="result-title"><span>👤</span> Consumer Information</div>
+                    <div class="info-grid">
+                        <div class="info-card">
+                            <div class="info-label">Name</div>
+                            <div class="info-value">${consumer.name}</div>
+                        </div>
+                        <div class="info-card">
+                            <div class="info-label">EB Category</div>
+                            <div class="info-value">${consumer.category}</div>
+                        </div>
+                        <div class="info-card">
+                            <div class="info-label">Connection Phase</div>
+                            <div class="info-value">${consumer.phase}</div>
+                        </div>
+                        <div class="info-card">
+                            <div class="info-label">Sanctioned Load</div>
+                            <div class="info-value">${consumer.sanctioned_load}</div>
+                        </div>
+                    </div>
+                    <p style="margin-top: 15px; color: #666; font-size: 0.9em;">
+                        <strong>Address:</strong> ${consumer.address}
+                    </p>
+                </div>
+
+                <!-- Consumption Analysis -->
+                <div class="result-section">
+                    <div class="result-title"><span>⚡</span> Consumption Analysis</div>
+                    <div class="info-grid">
+                        <div class="info-card">
+                            <div class="info-label">Average Monthly</div>
+                            <div class="info-value">${consumption.average_monthly_units.toFixed(0)} units</div>
+                        </div>
+                        <div class="info-card">
+                            <div class="info-label">Maximum Monthly</div>
+                            <div class="info-value">${consumption.max_monthly_units} units</div>
+                        </div>
+                        <div class="info-card">
+                            <div class="info-label">Minimum Monthly</div>
+                            <div class="info-value">${consumption.min_monthly_units} units</div>
+                        </div>
+                        <div class="info-card">
+                            <div class="info-label">Variation</div>
+                            <div class="info-value">${consumption.variation_percentage.toFixed(1)}%</div>
+                        </div>
+                    </div>
+                    <p style="margin-top: 15px; color: #666;">
+                        <strong>Insight:</strong> ${consumption.recommendation}
+                    </p>
+                </div>
+
+                <!-- TNEB Rate Analysis -->
+                <div class="result-section">
+                    <div class="result-title"><span>💵</span> Current TNEB Bill Analysis</div>
+                    <div class="info-grid">
+                        <div class="info-card">
+                            <div class="info-label">Current Monthly Bill</div>
+                            <div class="info-value">₹${(tnebRate.current_monthly_bill || 0).toLocaleString('en-IN')}</div>
+                        </div>
+                        <div class="info-card">
+                            <div class="info-label">Current Slab</div>
+                            <div class="info-value">${tnebRate.applicable_slab || 'N/A'}</div>
+                        </div>
+                        <div class="info-card">
+                            <div class="info-label">Effective Rate</div>
+                            <div class="info-value">₹${(tnebRate.effective_rate_per_unit || 0).toFixed(2)}/unit</div>
+                        </div>
+                        <div class="info-card">
+                            <div class="info-label">Annual Bill</div>
+                            <div class="info-value">₹${((tnebRate.current_monthly_bill || 0) * 12).toLocaleString('en-IN')}</div>
+                        </div>
+                    </div>
+                    ${rateSlab.insight ? `
+                    <div style="background: #fff3cd; padding: 15px; border-radius: 8px; margin-top: 15px; border-left: 4px solid #ffc107;">
+                        <strong style="color: #856404;">🎯 Rate Slab Opportunity:</strong>
+                        <p style="color: #856404; margin-top: 8px;">${rateSlab.insight}</p>
+                        <p style="color: #856404; margin-top: 8px;"><strong>Potential Monthly Benefit:</strong> ₹${(rateSlab.potential_slab_benefit || 0).toLocaleString('en-IN')} from lower slab alone!</p>
+                    </div>
+                    ` : ''}
+                </div>
+
+                <!-- Solar Recommendation -->
+                <div class="result-section">
+                    <div class="result-title"><span>☀️</span> Solar Recommendation</div>
+                    <div class="recommendation-box">
+                        <div class="label">
+                            Recommended System Size (${recommendation.calculation_basis})
+                        </div>
+                        <div class="value">${recommendation.recommended_kw} kW</div>
+                    </div>
+
+                    <div class="info-grid">
+                        <div class="info-card">
+                            <div class="info-label">Monthly Savings (Est.)</div>
+                            <div class="info-value">₹${(recommendation.monthly_save_estimate || 0).toLocaleString('en-IN')}</div>
+                        </div>
+                        <div class="info-card">
+                            <div class="info-label">Annual Savings (Est.)</div>
+                            <div class="info-value">₹${((recommendation.monthly_save_estimate || 0) * 12).toLocaleString('en-IN')}</div>
+                        </div>
+                        <div class="info-card">
+                            <div class="info-label">Payback Period</div>
+                            <div class="info-value">${recommendation.payback_period_years || 'N/A'} years</div>
+                        </div>
+                        <div class="info-card">
+                            <div class="info-label">25-Year Savings</div>
+                            <div class="info-value">₹${((recommendation.monthly_save_estimate || 0) * 12 * 25).toLocaleString('en-IN')}</div>
+                        </div>
+                    </div>
+
+                    <h3 style="margin-top: 20px; margin-bottom: 15px; color: #333;">Other Options:</h3>
+                    <div class="options">
+                        ${recommendation.options.map(opt => `
+                            <div class="option-item">
+                                <div class="option-name">${opt.option}</div>
+                                <div class="option-value">${opt.recommended_kw} kW</div>
+                                <div style="color: #667eea; font-weight: 600; margin-top: 8px; font-size: 0.9em;">
+                                    ₹${((opt.annual_savings || 0) * 12).toLocaleString('en-IN')}/year
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+
+                <!-- Next Steps -->
+                <div class="next-steps">
+                    <h3>✅ Next Steps</h3>
+                    <ol>
+                        <li><strong>Site Survey:</strong> Verify exact roof space for solar panel installation</li>
+                        <li><strong>Electrical Audit:</strong> Professional safety assessment of your connection</li>
+                        <li><strong>TNEB Application:</strong> Submit net metering application with required documents</li>
+                        <li><strong>Equipment Procurement:</strong> Source quality solar panels and inverters</li>
+                        <li><strong>Installation & Commissioning:</strong> Professional installation and inspection</li>
+                    </ol>
+                </div>
+            `;
+
+            resultDiv.innerHTML = html;
+        }
+
+        function showError(message) {
+            errorDiv.textContent = '❌ ' + message;
+            errorDiv.classList.add('show');
+        }
+
+        function showLoading(show) {
+            loading.style.display = show ? 'block' : 'none';
+        }
+    </script>
+</body>
+</html>

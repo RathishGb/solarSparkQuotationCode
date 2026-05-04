@@ -330,14 +330,34 @@ def generate_solar_pdf(data):
         consumption = int(round(yearly_consumption / 6))  # bi-monthly
         phase = conn.get('phase', '1Phase')
         
-        # Calculate derived values
-        panel_watt = 550
-        num_panels = math.ceil((kw * 1000) / panel_watt)
-        actual_wp = num_panels * panel_watt
-        actual_kw = actual_wp / 1000
+        # Calculate derived values strictly from input data
+        panel_watt = conn.get('panel_watt')
+        panel_brand = conn.get('panel_brand')
+        panel_type = conn.get('panel_type')
+        inverter = conn.get('inverter')
+        inverter_kw = conn.get('inverter_kw')
+        # Fallbacks only if missing in input (show as 'N/A' if not provided)
+        panel_watt = float(panel_watt) if panel_watt is not None else 'N/A'
+        panel_brand = str(panel_brand) if panel_brand is not None else 'N/A'
+        panel_type = str(panel_type) if panel_type is not None else 'N/A'
+        inverter = str(inverter) if inverter is not None else 'N/A'
+        inverter_kw = float(inverter_kw) if inverter_kw is not None else 'N/A'
+        # num_panels and actual_wp only if panel_watt is valid
+        if isinstance(panel_watt, float) and panel_watt > 0:
+            num_panels = int(conn.get('num_panels', math.ceil((kw * 1000) / panel_watt)))
+            actual_wp = num_panels * panel_watt
+        else:
+            num_panels = 'N/A'
+            actual_wp = 'N/A'
+        actual_kw = float(conn.get('kw', kw))  # Use input kW directly
         
-        cost_before_gst = round(price / 1.138)
-        gst_amount = price - cost_before_gst
+        # GST calculation: 70% at 5%, 30% at 18%
+        base_cost = price - 30000  # Exclude miscellaneous for GST
+        gst_70 = 0.7 * base_cost * 0.05
+        gst_30 = 0.3 * base_cost * 0.18
+        gst_amount = gst_70 + gst_30
+        cost_before_gst = base_cost
+        misc_expenses = 30000
         subsidy = calculate_subsidy(kw)
         net_price = price - subsidy
         
@@ -367,14 +387,14 @@ def generate_solar_pdf(data):
         
         elements.append(Spacer(1, 8*mm))
         
-        # EB number and capacity box
+        # EB number and capacity box (always use input kW, not recalculated)
         center_style = ParagraphStyle('boxCenter', parent=styles['Normal'], alignment=TA_CENTER)
         box_data = [
             [Paragraph(f"<b>Proposed SPV Capacity for ({eb_number})</b>", 
                        ParagraphStyle('b1', parent=center_style, fontSize=11, textColor=WHITE))],
-            [Paragraph(f"<b>{actual_kw}kW</b>",
+            [Paragraph(f"<b>{kw}kW</b>",
                        ParagraphStyle('b2', parent=center_style, fontSize=24, textColor=ACCENT, fontName='Helvetica-Bold'))],
-            [Paragraph(f"Total Price for {actual_kw}kW",
+            [Paragraph(f"Total Price for {kw}kW",
                        ParagraphStyle('b3', parent=center_style, fontSize=11, textColor=WHITE))],
             [Paragraph(f"<b>Rs. {format_inr(price)} /-</b>",
                        ParagraphStyle('b4', parent=center_style, fontSize=18, textColor=ACCENT, fontName='Helvetica-Bold'))],
@@ -394,11 +414,11 @@ def generate_solar_pdf(data):
         
         elements.append(Spacer(1, 8*mm))
         
-        # Sizing Specifications
+        # Sizing Specifications (all fields from input data)
         elements.append(Paragraph("SIZING – Specifications", styles['SectionHeader']))
         specs = [
-            f"<bullet>&bull;</bullet> Panels - {panel_watt} Wp x {num_panels} = {actual_wp} Wp",
-            f"<bullet>&bull;</bullet> Inverter – {actual_kw}kW - 1No – {phase}",
+            f"<bullet>&bull;</bullet> Panels - {panel_brand} {panel_type} {panel_watt} Wp x {num_panels} = {actual_wp} Wp",
+            f"<bullet>&bull;</bullet> Inverter – {inverter} – {inverter_kw} kW – {phase}",
             "<bullet>&bull;</bullet> Rest of the system as per standard",
         ]
         for spec in specs:
@@ -424,12 +444,15 @@ def generate_solar_pdf(data):
         
         # Price summary table
         price_data = [
-            [Paragraph(f"<b>Total Cost of the {kw} kW Solar Plant</b>", styles['BodyText2']),
+            [Paragraph(f"<b>Total Cost of the {kw} kW Solar Plant (Excl. Misc.)</b>", styles['BodyText2']),
              Paragraph(f"<b>Rs. {format_inr(cost_before_gst)}</b>", 
                        ParagraphStyle('', parent=styles['Normal'], fontSize=10, alignment=TA_RIGHT, fontName='Helvetica-Bold'))],
-            [Paragraph(f"GST (70% cost at 12%, Balance 30% cost at 18%) (13.8%)", styles['BodyText2']),
+            [Paragraph(f"GST (70% at 5%, 30% at 18%)", styles['BodyText2']),
              Paragraph(f"Rs. {format_inr(gst_amount)}", 
                        ParagraphStyle('', parent=styles['Normal'], fontSize=10, alignment=TA_RIGHT))],
+            [Paragraph(f"Miscellaneous Expenses (Delivery, Civil, EB Metering, etc.)", styles['BodyText2']),
+             Paragraph(f"Rs. {format_inr(misc_expenses)}", 
+                       ParagraphStyle('', parent=styles['Normal'], fontSize=10, alignment=TA_RIGHT, textColor=ACCENT))],
             [Paragraph(f"<b>Total price of solar plant</b>", styles['BodyText2']),
              Paragraph(f"<b>Rs. {format_inr(price)}/-</b>", 
                        ParagraphStyle('', parent=styles['Normal'], fontSize=10, alignment=TA_RIGHT, fontName='Helvetica-Bold', textColor=PRIMARY))],
@@ -459,9 +482,9 @@ def generate_solar_pdf(data):
         elements.append(Paragraph("SYSTEM COMPONENTS", styles['SectionHeader']))
         
         components = [
-            f"<b>Solar Panels:</b> Bi Facial DCR Panels – {panel_watt} Wp Solar panels – 10-12 years product warranty / 25 years performance warranty. Make - Waree/Luminous/Gautam/EVVO",
+            f"<b>Solar Panels:</b> {panel_brand} {panel_type} – {panel_watt} Wp x {num_panels} = {actual_wp} Wp – 10-12 years product warranty / 25 years performance warranty.",
             f"<b>Module Mounting Structure:</b> Pre Galvanised mounting structure with needed bolts and nuts",
-            f"<b>Grid Tied Inverter:</b> {phase} – {actual_kw} kW Growatt/EVVO/Polycab",
+            f"<b>Grid Tied Inverter:</b> {inverter} – {inverter_kw} kW – {phase}",
             "<b>Remote Monitoring System with Sensors:</b> Inbuilt – PCU Make",
             "<b>DC Distribution Box:</b> IP65 – with Fuses/DC SPD/Switches - MC4 Compatible make - Nordic",
             f"<b>AC Distribution Board:</b> IP65 – PC Closure – with MCB type-2 – MC4 Compatible - SPD at grid side output. Make - Nordic",

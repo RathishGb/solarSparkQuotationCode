@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TNEB EB Number Search</title>
+    <style>
+        body { font-family: Arial, sans-serif; background: #f4f6fb; }
+        .container { max-width: 500px; margin: 60px auto; background: #fff; padding: 32px 28px; border-radius: 12px; box-shadow: 0 8px 32px rgba(0,0,0,0.10); }
+        h2 { color: #1a3a5c; margin-bottom: 18px; }
+        .form-group { margin-bottom: 18px; }
+        label { display: block; margin-bottom: 6px; font-weight: 600; color: #1a3a5c; }
+        input[type="text"] { width: 100%; padding: 10px 14px; border: 1px solid #bfc9d1; border-radius: 6px; font-size: 1em; }
+        button { background: #f4a261; color: #fff; border: none; padding: 12px 24px; border-radius: 6px; font-size: 1em; cursor: pointer; }
+        .result { margin-top: 24px; background: #e9f5e1; border-left: 4px solid #4caf50; padding: 18px; border-radius: 8px; }
+        .error { margin-top: 24px; background: #ffeaea; border-left: 4px solid #e74c3c; padding: 18px; border-radius: 8px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>Search TNEB Consumer Details</h2>
+        <form id="eb-search-form">
+            <div class="form-group">
+                <label for="eb_number">Enter EB Number:</label>
+                <input type="text" id="eb_number" name="eb_number" required placeholder="e.g., 123456789012">
+            </div>
+            <div class="form-group">
+                <label for="panel_watt">Panel Watt (W):</label>
+                <input type="number" id="panel_watt" name="panel_watt" required placeholder="e.g., 540">
+            </div>
+            <button type="submit">Fetch Details & Suggest kW</button>
+        </form>
+        <div id="result"></div>
+    </div>
+    <script>
+        document.getElementById('eb-search-form').onsubmit = async function(e) {
+            e.preventDefault();
+            const eb_number = document.getElementById('eb_number').value.trim();
+            const panel_watt = document.getElementById('panel_watt').value.trim();
+            const resultDiv = document.getElementById('result');
+            resultDiv.innerHTML = '';
+            try {
+                const res = await fetch('/tneb-search', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ eb_number, panel_watt })
+                });
+                const data = await res.json();
+                if (data.error) {
+                    resultDiv.innerHTML = `<div class='error'>${data.error}</div>`;
+                } else {
+                        <strong>Consumer Name:</strong> ${data.consumer.consumer_name}<br>
+                        <strong>Address:</strong> ${data.consumer.service_address}<br>
+                        <strong>Last Month Units:</strong> ${data.consumer.last_consumption_units}<br>
+                        <strong>Avg. Monthly Units:</strong> ${data.consumer.average_monthly_consumption}<br>
+                        <strong>Suggested Solar kW:</strong> <span style='color:#388e3c;font-weight:bold;'>${data.solar_kw} kW</span><br>
+                        <strong>Recommendation:</strong> ${data.recommendation}
+                    </div>`;
+                    resultDiv.innerHTML = `<div class='result'>
+                        <strong>Consumer Name:</strong> ${data.consumer.consumer_name}<br>
+                        <strong>Address:</strong> ${data.consumer.service_address}<br>
+                        <strong>Last Month Units:</strong> ${data.consumer.last_consumption_units}<br>
+                        <strong>Avg. Monthly Units:</strong> ${data.consumer.average_monthly_consumption}<br>
+                        <strong>Panel Watt:</strong> ${data.panel_watt} W<br>
+                        <strong>Suggested Solar kW:</strong> <span style='color:#388e3c;font-weight:bold;'>${data.solar_kw} kW</span><br>
+                        <strong>Recommendation:</strong> ${data.recommendation}
+                    </div>`;
+                }
+            } catch (err) {
+                resultDiv.innerHTML = `<div class='error'>Error fetching details. Please try again.</div>`;
+            }
+        }
+    </script>
+</body>
+</html>
